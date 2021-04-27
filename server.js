@@ -1,8 +1,10 @@
 const express = require('express');
 const cors = require('cors');
 const { graphqlHTTP } = require('express-graphql');
-const { GraphQLSchema, GraphQLObjectType, GraphQLString, GraphQLNonNull, GraphQLInt, GraphQLList } = require('graphql');
+const { GraphQLSchema, GraphQLObjectType, GraphQLString, GraphQLNonNull, GraphQLInt, GraphQLList, isNullableType } = require('graphql');
 const { Client } = require('pg');
+
+const table = 'todo."Todo"';
 
 const client = new Client({
     host: "localhost",
@@ -25,6 +27,7 @@ const TodoType = new GraphQLObjectType({
 
 const QueryRoot = new GraphQLObjectType({
     name: 'Query',
+    description: 'Root query',
     fields: () => ({
         todos: {
             type: GraphQLList(TodoType),
@@ -44,7 +47,21 @@ const QueryRoot = new GraphQLObjectType({
     }),
 });
 
-const schema = new GraphQLSchema({ query: QueryRoot });
+const RootMutation = new GraphQLObjectType({
+    name: 'Mutation',
+    description: 'Root mutation',
+    fields: () => ({
+        deleteTodo: {
+            type: GraphQLInt,
+            args: { todoID: { type: GraphQLNonNull(GraphQLInt) } },
+            resolve: (parent, args, ctx, resInfo) => {
+                client.query(`DELETE from ${table} WHERE "todoID" = ${args.todoID}`).then(res => { return args.todoID });
+            }
+        }
+    }),
+});
+
+const schema = new GraphQLSchema({ query: QueryRoot, mutation: RootMutation });
 
 const app = express();
 app.use(cors());

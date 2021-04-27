@@ -4,9 +4,10 @@ import { ITodo } from '../interfaces';
 
 interface Props {
     todo: ITodo;
+    onDelete: (todoID: number) => void;
 }
 
-export const TodoItem: React.FC<Props> = ({ todo }) => {
+export const TodoItem: React.FC<Props> = ({ todo, onDelete }) => {
     return (
         <div className="todo-item">
             <div className="todo-task">
@@ -15,6 +16,7 @@ export const TodoItem: React.FC<Props> = ({ todo }) => {
             <div className="todo-category">
                 {todo.category}
             </div>
+            <button type="button" onClick={() => onDelete(todo.todoID)}>X</button>
         </div>
     )
 }

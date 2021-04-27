@@ -34,16 +34,29 @@ function App() {
     }).then(r => r.json()).then(data => data.data.todos);
   }
 
+  const deleteTodo = async (id: number): Promise<void> => {
+    await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'mode': 'no-cors',
+        'url': `http://localhost:4000`,
+      },
+      body: JSON.stringify({ query: `mutation { deleteTodo(todoID:${id}) } ` })
+    });
+  }
+
   return (
     <div className="container" >
       <h1>
         to-do list
       </h1>
       <div className="todo-wrapper">
-        {todos.map((todo: ITodo) => {
+        {todos.length > 0 && todos.map((todo: ITodo) => {
           return (
             <div key={todo.todoID}>
-              <TodoItem todo={todo} />
+              <TodoItem todo={todo} onDelete={deleteTodo} />
             </div>
           )
         })}
