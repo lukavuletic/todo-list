@@ -8,13 +8,13 @@ interface Props {
 
 export const TodoItem: React.FC<Props> = ({ todo }) => {
     return (
-        <React.Fragment>
-            <div>
+        <div className="todo-item">
+            <div className="todo-task">
                 {todo.task}
             </div>
-            <div>
+            <div className="todo-category">
                 {todo.category}
             </div>
-        </React.Fragment>
+        </div>
     )
 }

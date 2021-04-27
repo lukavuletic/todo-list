@@ -6,6 +6,8 @@ import { TodoItem } from './components';
 
 import { ITodo } from './interfaces';
 
+const url = 'http://localhost:4000/api';
+
 function App() {
   const [todos, setStateTodos] = useState<ITodo[]>([]);
 
@@ -20,7 +22,7 @@ function App() {
   }, []);
 
   const getTodos = async (): Promise<ITodo[]> => {
-    return await fetch('http://localhost:4000/api', {
+    return await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -34,17 +36,18 @@ function App() {
 
   return (
     <div className="container" >
-      <header>
+      <h1>
         to-do list
-      </header>
-      {todos.map((todo: ITodo) => {
-        console.log(todo.todoID)
-        return (
-          <div key={todo.todoID}>
-            <TodoItem todo={todo} />
-          </div>
-        )
-      })}
+      </h1>
+      <div className="todo-wrapper">
+        {todos.map((todo: ITodo) => {
+          return (
+            <div key={todo.todoID}>
+              <TodoItem todo={todo} />
+            </div>
+          )
+        })}
+      </div>
     </div>
   );
 }
