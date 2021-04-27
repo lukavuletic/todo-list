@@ -1,7 +1,8 @@
 const express = require('express');
+const cors = require('cors');
 const { graphqlHTTP } = require('express-graphql');
 const { GraphQLSchema, GraphQLObjectType, GraphQLString, GraphQLNonNull, GraphQLInt, GraphQLList } = require('graphql');
-const { Client } = require('pg')
+const { Client } = require('pg');
 
 const client = new Client({
     host: "localhost",
@@ -28,9 +29,7 @@ const QueryRoot = new GraphQLObjectType({
         todos: {
             type: GraphQLList(TodoType),
             resolve: (parent, args, ctx, resInfo) => {
-                return client.query(`SELECT * FROM todo."Todo"`, (err, res) => {
-                    return err ? err : res.rows;
-                });
+                return client.query(`SELECT * FROM todo."Todo"`).then(res => res.rows);
             },
         },
         todo: {
@@ -48,6 +47,7 @@ const QueryRoot = new GraphQLObjectType({
 const schema = new GraphQLSchema({ query: QueryRoot });
 
 const app = express();
+app.use(cors());
 app.use('/api', graphqlHTTP({
     schema: schema,
     graphiql: true,
