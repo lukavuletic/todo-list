@@ -1,11 +1,12 @@
 import React, { FormEvent } from 'react';
+import { ITodo } from '../interfaces';
 
 interface Props {
     onSubmit: (e: FormEvent) => Promise<void>;
-    onTaskInputChange: (value: string) => void;
-    onCategoryInputChange: (value: string) => void;
-    taskInputValue: string;
-    categoryInputValue: string;
+    onTaskInputChange: (value: ITodo["task"]) => void;
+    onCategoryInputChange: (value: ITodo["category"]) => void;
+    taskInputValue: ITodo["task"];
+    categoryInputValue: ITodo["category"];
 }
 
 export const TodoCreate: React.FC<Props> = ({ onSubmit, onTaskInputChange, onCategoryInputChange, taskInputValue, categoryInputValue }) => {

@@ -4,9 +4,9 @@ import { ITodo } from '../interfaces';
 
 interface Props {
     todo: ITodo;
-    onDelete: (todoID: number) => void;
-    onSave: (todoID: number) => Promise<void>;
-    onTodoItemTaskInputChange: (todoID: number, value: string) => void;
+    onDelete: (todoID: ITodo["todoID"]) => void;
+    onSave: (todoID: ITodo["todoID"]) => Promise<void>;
+    onTodoItemTaskInputChange: (todoID: ITodo["todoID"], value: ITodo["task"]) => void;
 }
 
 export const TodoItem: React.FC<Props> = ({ todo, onDelete, onTodoItemTaskInputChange, onSave }) => {

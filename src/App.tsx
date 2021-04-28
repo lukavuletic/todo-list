@@ -28,7 +28,7 @@ function App() {
   }, []);
 
   const getTodos = async (isInitial: boolean = false): Promise<ITodo[]> => {
-    const res = await coreClient.post(
+    const res: ITodo[] = await coreClient.post(
       `{ 
         todos { 
           todoID
@@ -38,7 +38,7 @@ function App() {
       }`
     ).then(r => r.json()).then(data => data.data.todos);
 
-    const categories: string[] = res.map(({ category }: { category: string }) => category);
+    const categories: ITodo["category"][] = res.map(({ category }: { category: ITodo["category"] }) => category);
     setCategories([...new Set(categories)]);
 
     if (isInitial) {
@@ -48,21 +48,20 @@ function App() {
     return res;
   }
 
-  const setSelectedCategory = (category: string): void => {
-    const ctgIdxInSelCtgs: number = selectedCategories.findIndex((c: string) => category === c);
+  const setSelectedCategory = (category: ITodo["category"]): void => {
+    const ctgIdxInSelCtgs: number = selectedCategories.findIndex((c: ITodo["category"]) => category === c);
     if (ctgIdxInSelCtgs === -1) {
       setStateSelectedCategories([...selectedCategories, category]);
     } else {
-      setStateSelectedCategories(selectedCategories.filter((c: string) => c !== category));
+      setStateSelectedCategories(selectedCategories.filter((c: ITodo["category"]) => c !== category));
     }
-    console.log(selectedCategories)
   }
 
   const setCategories = (categories: string[]): void => {
     setStateCategories(categories);
   }
 
-  const deleteTodo = async (id: number): Promise<void> => {
+  const deleteTodo = async (id: ITodo["todoID"]): Promise<void> => {
     await coreClient.post(
       `mutation {
         deleteTodo(todoID:${id})
@@ -90,15 +89,15 @@ function App() {
     setStateCategoryInputValue('');
   }
 
-  const onTaskInputChange = (value: string): void => {
+  const onTaskInputChange = (value: ITodo["task"]): void => {
     setStateTaskInputValue(value);
   }
 
-  const onCategoryInputChange = (value: string): void => {
+  const onCategoryInputChange = (value: ITodo["category"]): void => {
     setStateCategoryInputValue(value);
   }
 
-  const onTodoItemTaskInputChange = (todoID: number, value: string): void => {
+  const onTodoItemTaskInputChange = (todoID: number, value: ITodo["task"]): void => {
     const todoItemIdx: number = todos.findIndex((todo: ITodo) => todo.todoID === todoID);
     const todosSlice: ITodo[] = todos.slice();
     todosSlice[todoItemIdx].task = value;
@@ -106,7 +105,7 @@ function App() {
     setStateTodos(todosSlice);
   }
 
-  const onTodoItemTaskInputSave = async (todoID: number): Promise<void> => {
+  const onTodoItemTaskInputSave = async (todoID: ITodo["todoID"]): Promise<void> => {
     const todoItem: ITodo = todos.find((todo: ITodo) => todo.todoID === todoID)!;
 
     await coreClient.post(

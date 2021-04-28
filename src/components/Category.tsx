@@ -1,7 +1,8 @@
 import React from 'react';
+import { ITodo } from '../interfaces';
 
 interface Props {
-    category: string;
+    category: ITodo["category"];
     onSelect: (category: string) => void;
 }
 
