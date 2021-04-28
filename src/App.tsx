@@ -21,7 +21,6 @@ function App() {
       const todosRes: ITodo[] = await getTodos(true);
 
       setStateTodos(todosRes);
-
     }
 
     fetchTodos();
@@ -85,6 +84,10 @@ function App() {
     );
 
     setStateTodos(await getTodos());
+    // if label is newly created, select it by defualt
+    if (!categories.includes(categoryInputValue)) {
+      setStateSelectedCategories([...selectedCategories, categoryInputValue]);
+    }
     setStateTaskInputValue('');
     setStateCategoryInputValue('');
   }
@@ -125,6 +128,16 @@ function App() {
       <button type="button" onClick={() => setStateToggleCreateFormShown(!isCreateFormShown)}>
         {isCreateFormShown ? 'Close' : 'Add a todo'}
       </button>
+      {isCreateFormShown &&
+        <TodoCreate
+          onSubmit={createTodo}
+          onTaskInputChange={onTaskInputChange}
+          onCategoryInputChange={onCategoryInputChange}
+          taskInputValue={taskInputValue}
+          categoryInputValue={categoryInputValue}
+        />
+      }
+      <br />
       <p>Categories:</p>
       {categories.length > 0 && categories.map((category: string, idx: number) => {
         return (
@@ -136,15 +149,6 @@ function App() {
           </div>
         )
       })}
-      {isCreateFormShown &&
-        <TodoCreate
-          onSubmit={createTodo}
-          onTaskInputChange={onTaskInputChange}
-          onCategoryInputChange={onCategoryInputChange}
-          taskInputValue={taskInputValue}
-          categoryInputValue={categoryInputValue}
-        />
-      }
       <br />
       <div className="todo-wrapper">
         {todos.length > 0 && todos.filter((todo: ITodo) => selectedCategories.includes(todo.category)).map((todo: ITodo) => {
