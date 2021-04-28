@@ -33,17 +33,19 @@ const QueryRoot = new GraphQLObjectType({
     fields: () => ({
         todos: {
             type: GraphQLList(TodoType),
-            resolve: (parent, args, ctx, resInfo) => {
-                return client.query(`SELECT * FROM todo."Todo"`).then(res => res.rows);
+            resolve: async (parent, args, ctx, resInfo) => {
+                const res = await client.query(`SELECT * FROM ${table}`).then(res => res.rows);
+                return res.rows || res;
             },
         },
         todo: {
             type: TodoType,
-            args: { todoID: { type: GraphQLNonNull(GraphQLInt) } },
-            resolve: (parent, args, ctx, resInfo) => {
-                return client.query(`SELECT * FROM todo."Todo" WHERE "todoID" = ${args.todoID}`, (err, res) => {
+            args: { todoID: TodoTypeFields.todoID },
+            resolve: async (parent, args, ctx, resInfo) => {
+                const res = await client.query(`SELECT * FROM ${table} WHERE "todoID" = '${args.todoID}'`).then((err, res) => {
                     return err ? err : res.rows[0];
                 });
+                return res.rows && res.rows[0] || res;
             },
         }
     }),
@@ -55,15 +57,15 @@ const RootMutation = new GraphQLObjectType({
     fields: () => ({
         deleteTodo: {
             type: GraphQLString,
-            args: { todoID: { type: GraphQLNonNull(GraphQLInt) } },
-            resolve: (parent, args, ctx, resInfo) => {
-                client.query(`DELETE from ${table} WHERE "todoID" = ${args.todoID}`).then(res => { return args.todoID });
-                return 'success';
+            args: { todoID: TodoTypeFields.todoID },
+            resolve: async (parent, args, ctx, resInfo) => {
+                await client.query(`DELETE from ${table} WHERE "todoID" = ${args.todoID}`).then(() => { return args.todoID });
+                return 'Task successfully deleted';
             },
         },
         createTodo: {
             type: TodoType,
-            args: { task: { type: GraphQLNonNull(GraphQLString) }, category: { type: GraphQLNonNull(GraphQLString) } },
+            args: { task: TodoTypeFields.task, category: TodoTypeFields.category },
             resolve: async (parents, args, ctx, resInfo) => {
                 const res = await client.query(`INSERT INTO ${table} (task, category) VALUES ('${args.task}', '${args.category}') RETURNING *`).then((err, res) => {
                     return err ? err : res.rows[0];
