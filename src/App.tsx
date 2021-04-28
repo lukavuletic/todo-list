@@ -45,6 +45,8 @@ function App() {
       },
       body: JSON.stringify({ query: `mutation { deleteTodo(todoID:${id}) } ` })
     });
+
+    setStateTodos(await getTodos());
   }
 
   return (
