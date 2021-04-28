@@ -139,30 +139,35 @@ function App() {
       }
       <br />
       <p>Categories:</p>
-      {categories.length > 0 && categories.map((category: string, idx: number) => {
-        return (
-          <div key={idx} className={`category${selectedCategories.includes(category) ? '-selected' : ''}`}>
-            <Category
-              category={category}
-              onSelect={setSelectedCategory}
-            />
-          </div>
-        )
-      })}
-      <br />
-      <div className="todo-wrapper">
-        {todos.length > 0 && todos.filter((todo: ITodo) => selectedCategories.includes(todo.category)).map((todo: ITodo) => {
+      {categories.length > 0 && categories.sort((a, b) => a.localeCompare(b))
+        .map((category: string, idx: number) => {
           return (
-            <div key={todo.todoID}>
-              <TodoItem
-                todo={todo}
-                onDelete={deleteTodo}
-                onTodoItemTaskInputChange={onTodoItemTaskInputChange}
-                onSave={onTodoItemTaskInputSave}
+            <div key={idx} className={`category${selectedCategories.includes(category) ? '-selected' : ''}`}>
+              <Category
+                category={category}
+                onSelect={setSelectedCategory}
               />
             </div>
           )
-        })}
+        })
+      }
+      <br />
+      <div className="todo-wrapper">
+        {todos.length > 0 && todos.filter((todo: ITodo) => selectedCategories.includes(todo.category))
+          .sort((a, b) => a.category.localeCompare(b.category))
+          .map((todo: ITodo) => {
+            return (
+              <div key={todo.todoID}>
+                <TodoItem
+                  todo={todo}
+                  onDelete={deleteTodo}
+                  onTodoItemTaskInputChange={onTodoItemTaskInputChange}
+                  onSave={onTodoItemTaskInputSave}
+                />
+              </div>
+            )
+          })
+        }
       </div>
     </div>
   );
