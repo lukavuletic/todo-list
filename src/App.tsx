@@ -2,12 +2,14 @@ import React, { FormEvent, useEffect, useState } from 'react';
 
 import './App.css';
 
-import { TodoItem, TodoCreate } from './components';
+import { TodoItem, TodoCreate, Category } from './components';
 import { ITodo } from './interfaces';
 import { CoreClient } from './core';
 
 function App() {
   const [todos, setStateTodos] = useState<ITodo[]>([]);
+  const [categories, setStateCategories] = useState<string[]>([]);
+  const [selectedCategories, setStateSelectedCategories] = useState<string[]>([]);
   const [isCreateFormShown, setStateToggleCreateFormShown] = useState<boolean>(false);
   const [taskInputValue, setStateTaskInputValue] = useState<string>('');
   const [categoryInputValue, setStateCategoryInputValue] = useState<string>('');
@@ -16,16 +18,17 @@ function App() {
 
   useEffect(() => {
     const fetchTodos = async (): Promise<void> => {
-      const todosRes: ITodo[] = await getTodos();
+      const todosRes: ITodo[] = await getTodos(true);
 
       setStateTodos(todosRes);
+
     }
 
     fetchTodos();
   }, []);
 
-  const getTodos = async (): Promise<ITodo[]> => {
-    return await coreClient.post(
+  const getTodos = async (isInitial: boolean = false): Promise<ITodo[]> => {
+    const res = await coreClient.post(
       `{ 
         todos { 
           todoID
@@ -34,6 +37,29 @@ function App() {
         } 
       }`
     ).then(r => r.json()).then(data => data.data.todos);
+
+    const categories: string[] = res.map(({ category }: { category: string }) => category);
+    setCategories([...new Set(categories)]);
+
+    if (isInitial) {
+      setStateSelectedCategories(categories);
+    }
+
+    return res;
+  }
+
+  const setSelectedCategory = (category: string): void => {
+    const ctgIdxInSelCtgs: number = selectedCategories.findIndex((c: string) => category === c);
+    if (ctgIdxInSelCtgs === -1) {
+      setStateSelectedCategories([...selectedCategories, category]);
+    } else {
+      setStateSelectedCategories(selectedCategories.filter((c: string) => c !== category));
+    }
+    console.log(selectedCategories)
+  }
+
+  const setCategories = (categories: string[]): void => {
+    setStateCategories(categories);
   }
 
   const deleteTodo = async (id: number): Promise<void> => {
@@ -81,9 +107,7 @@ function App() {
   }
 
   const onTodoItemTaskInputSave = async (todoID: number): Promise<void> => {
-    // e.preventDefault();
-
-    const todoItem: ITodo = todos.find((todo: ITodo) => todo.todoID === todoID);
+    const todoItem: ITodo = todos.find((todo: ITodo) => todo.todoID === todoID)!;
 
     await coreClient.post(
       `mutation {
@@ -102,6 +126,17 @@ function App() {
       <button type="button" onClick={() => setStateToggleCreateFormShown(!isCreateFormShown)}>
         {isCreateFormShown ? 'Close' : 'Add a todo'}
       </button>
+      <p>Categories:</p>
+      {categories.length > 0 && categories.map((category: string, idx: number) => {
+        return (
+          <div key={idx} className={`category${selectedCategories.includes(category) ? '-selected' : ''}`}>
+            <Category
+              category={category}
+              onSelect={setSelectedCategory}
+            />
+          </div>
+        )
+      })}
       {isCreateFormShown &&
         <TodoCreate
           onSubmit={createTodo}
@@ -111,8 +146,9 @@ function App() {
           categoryInputValue={categoryInputValue}
         />
       }
+      <br />
       <div className="todo-wrapper">
-        {todos.length > 0 && todos.map((todo: ITodo) => {
+        {todos.length > 0 && todos.filter((todo: ITodo) => selectedCategories.includes(todo.category)).map((todo: ITodo) => {
           return (
             <div key={todo.todoID}>
               <TodoItem
