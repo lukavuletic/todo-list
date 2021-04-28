@@ -57,7 +57,14 @@ const RootMutation = new GraphQLObjectType({
             resolve: (parent, args, ctx, resInfo) => {
                 client.query(`DELETE from ${table} WHERE "todoID" = ${args.todoID}`).then(res => { return args.todoID });
             }
-        }
+        },
+        createTodo: {
+            type: GraphQLInt,
+            args: { task: { type: GraphQLNonNull(GraphQLString) }, category: { type: GraphQLNonNull(GraphQLString) } },
+            resolve: (parents, args, ctx, resInfo) => {
+                client.query(`INSERT INTO ${table} (task, category) VALUES ('${args.task}', '${args.category}')`);
+            }
+        },
     }),
 });
 
