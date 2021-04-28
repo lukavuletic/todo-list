@@ -3,16 +3,16 @@ import React, { FormEvent, useEffect, useState } from 'react';
 import './App.css';
 
 import { TodoItem, TodoCreate } from './components';
-
 import { ITodo } from './interfaces';
-
-const url = 'http://localhost:4000/api';
+import { CoreClient } from './core';
 
 function App() {
   const [todos, setStateTodos] = useState<ITodo[]>([]);
   const [isCreateFormShown, setStateToggleCreateFormShown] = useState<boolean>(false);
   const [taskInputValue, setStateTaskInputValue] = useState<string>('');
   const [categoryInputValue, setStateCategoryInputValue] = useState<string>('');
+
+  const coreClient = new CoreClient();
 
   useEffect(() => {
     const fetchTodos = async (): Promise<void> => {
@@ -25,29 +25,23 @@ function App() {
   }, []);
 
   const getTodos = async (): Promise<ITodo[]> => {
-    return await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'mode': 'no-cors',
-        'url': `http://localhost:4000`,
-      },
-      body: JSON.stringify({ query: "{ todos { todoID task category } }" })
-    }).then(r => r.json()).then(data => data.data.todos);
+    return await coreClient.post(
+      `{ 
+        todos { 
+          todoID
+          task
+          category 
+        } 
+      }`
+    ).then(r => r.json()).then(data => data.data.todos);
   }
 
   const deleteTodo = async (id: number): Promise<void> => {
-    await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'mode': 'no-cors',
-        'url': `http://localhost:4000`,
-      },
-      body: JSON.stringify({ query: `mutation { deleteTodo(todoID:${id}) } ` })
-    });
+    await coreClient.post(
+      `mutation {
+        deleteTodo(todoID:${id})
+      }`
+    );
 
     setStateTodos(await getTodos());
   }
@@ -55,16 +49,15 @@ function App() {
   const createTodo = async (e: FormEvent): Promise<void> => {
     e.preventDefault();
 
-    await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'mode': 'no-cors',
-        'url': `http://localhost:4000`,
-      },
-      body: JSON.stringify({ query: `mutation { createTodo(task: "${taskInputValue}", category: "${categoryInputValue}" ) } ` })
-    });
+    await coreClient.post(
+      `mutation {
+        createTodo(task: "${taskInputValue}", category: "${categoryInputValue}" ) {
+          todoID
+          task
+          category
+        }
+      }`
+    );
 
     setStateTodos(await getTodos());
     setStateTaskInputValue('');
@@ -92,22 +85,13 @@ function App() {
 
     const todoItem: ITodo = todos.find((todo: ITodo) => todo.todoID === todoID);
 
-    await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'mode': 'no-cors',
-        'url': `http://localhost:4000`,
-      },
-      body: JSON.stringify({
-        query: `mutation {
+    await coreClient.post(
+      `mutation {
         updateTodo(todoID: ${todoID}, task: "${todoItem.task}", category: "${todoItem.category}") {
           task
         }
       }`
-      }),
-    });
+    );
   }
 
   return (
