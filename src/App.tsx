@@ -27,24 +27,29 @@ function App() {
   }, []);
 
   const getTodos = async (isInitial: boolean = false): Promise<ITodo[]> => {
-    const res: ITodo[] = await coreClient.post(
-      `{ 
-        todos { 
-          todoID
-          task
-          category 
-        } 
-      }`
-    ).then(r => r.json()).then(data => data.data.todos);
-
-    const categories: ITodo["category"][] = res.map(({ category }: { category: ITodo["category"] }) => category);
-    setCategories([...new Set(categories)]);
-
-    if (isInitial) {
-      setStateSelectedCategories(categories);
+    try {
+      const res: ITodo[] = await coreClient.post(
+        `{ 
+          todos { 
+            todoID
+            task
+            category 
+          } 
+        }`
+      ).then(r => r.json()).then(data => data.data.todos);
+  
+      const categories: ITodo["category"][] = res.map(({ category }: { category: ITodo["category"] }) => category);
+      setCategories([...new Set(categories)]);
+  
+      if (isInitial) {
+        setStateSelectedCategories(categories);
+      }
+  
+      return res;
+    } catch (err) {
+      console.log(err);
+      throw new Error('failed to get todos');
     }
-
-    return res;
   }
 
   const setSelectedCategory = (category: ITodo["category"]): void => {
@@ -61,35 +66,45 @@ function App() {
   }
 
   const deleteTodo = async (id: ITodo["todoID"]): Promise<void> => {
-    await coreClient.post(
-      `mutation {
-        deleteTodo(todoID:${id})
-      }`
-    );
-
-    setStateTodos(await getTodos());
+    try {
+      await coreClient.post(
+        `mutation {
+          deleteTodo(todoID:${id})
+        }`
+      );
+  
+      setStateTodos(await getTodos());
+    } catch (err) {
+      console.log(err);
+      throw new Error('failed to delete the todo');
+    }
   }
 
   const createTodo = async (e: FormEvent): Promise<void> => {
     e.preventDefault();
 
-    await coreClient.post(
-      `mutation {
-        createTodo(task: "${taskInputValue}", category: "${categoryInputValue}" ) {
-          todoID
-          task
-          category
-        }
-      }`
-    );
-
-    setStateTodos(await getTodos());
-    // if label is newly created, select it by defualt
-    if (!categories.includes(categoryInputValue)) {
-      setStateSelectedCategories([...selectedCategories, categoryInputValue]);
+    try {
+      await coreClient.post(
+        `mutation {
+          createTodo(task: "${taskInputValue}", category: "${categoryInputValue}" ) {
+            todoID
+            task
+            category
+          }
+        }`
+      );
+  
+      setStateTodos(await getTodos());
+      // if label is newly created, select it by defualt
+      if (!categories.includes(categoryInputValue)) {
+        setStateSelectedCategories([...selectedCategories, categoryInputValue]);
+      }
+      setStateTaskInputValue('');
+      setStateCategoryInputValue('');
+    } catch (err) {
+      console.log(err);
+      throw new Error('failed to create the todo');
     }
-    setStateTaskInputValue('');
-    setStateCategoryInputValue('');
   }
 
   const onTaskInputChange = (value: ITodo["task"]): void => {
@@ -109,15 +124,20 @@ function App() {
   }
 
   const onTodoItemTaskInputSave = async (todoID: ITodo["todoID"]): Promise<void> => {
-    const todoItem: ITodo = todos.find((todo: ITodo) => todo.todoID === todoID)!;
-
-    await coreClient.post(
-      `mutation {
-        updateTodo(todoID: ${todoID}, task: "${todoItem.task}", category: "${todoItem.category}") {
-          task
-        }
-      }`
-    );
+    try {
+      const todoItem: ITodo = todos.find((todo: ITodo) => todo.todoID === todoID)!;
+  
+      await coreClient.post(
+        `mutation {
+          updateTodo(todoID: ${todoID}, task: "${todoItem.task}", category: "${todoItem.category}") {
+            task
+          }
+        }`
+      );
+    } catch (err) {
+      console.log(err);
+      throw new Error('failed to update the todo');
+    }
   }
 
   return (
