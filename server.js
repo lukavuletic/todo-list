@@ -15,14 +15,16 @@ const client = new Client({
 });
 client.connect();
 
+const TodoTypeFields = {
+    todoID: { type: new GraphQLNonNull(GraphQLInt) },
+    task: { type: new GraphQLNonNull(GraphQLString) },
+    category: { type: new GraphQLNonNull(GraphQLString) },
+}
+
 const TodoType = new GraphQLObjectType({
     name: 'todo',
     description: 'A todo',
-    fields: () => ({
-        todoID: { type: new GraphQLNonNull(GraphQLInt) },
-        task: { type: new GraphQLNonNull(GraphQLString) },
-        category: { type: new GraphQLNonNull(GraphQLString) },
-    }),
+    fields: () => (TodoTypeFields),
 });
 
 const QueryRoot = new GraphQLObjectType({
@@ -52,11 +54,12 @@ const RootMutation = new GraphQLObjectType({
     description: 'Root mutation',
     fields: () => ({
         deleteTodo: {
-            type: GraphQLInt,
+            type: GraphQLString,
             args: { todoID: { type: GraphQLNonNull(GraphQLInt) } },
             resolve: (parent, args, ctx, resInfo) => {
                 client.query(`DELETE from ${table} WHERE "todoID" = ${args.todoID}`).then(res => { return args.todoID });
-            }
+                return 'success';
+            },
         },
         createTodo: {
             type: TodoType,
@@ -66,7 +69,17 @@ const RootMutation = new GraphQLObjectType({
                     return err ? err : res.rows[0];
                 });
                 return res.rows && res.rows[0] || res;
-            }
+            },
+        },
+        updateTodo: {
+            type: TodoType,
+            args: TodoTypeFields,
+            resolve: async (parents, args, ctx, resInfo) => {
+                const res = await client.query(`UPDATE ${table} SET task = '${args.task}', category = '${args.category}' WHERE "todoID" = '${args.todoID}' RETURNING *`).then((err, res) => {
+                    return err ? err : res.rows[0];
+                });
+                return res.rows && res.rows[0] || res;
+            },
         },
     }),
 });

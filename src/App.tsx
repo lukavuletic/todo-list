@@ -79,6 +79,37 @@ function App() {
     setStateCategoryInputValue(value);
   }
 
+  const onTodoItemTaskInputChange = (todoID: number, value: string): void => {
+    const todoItemIdx: number = todos.findIndex((todo: ITodo) => todo.todoID === todoID);
+    const todosSlice: ITodo[] = todos.slice();
+    todosSlice[todoItemIdx].task = value;
+
+    setStateTodos(todosSlice);
+  }
+
+  const onTodoItemTaskInputSave = async (todoID: number): Promise<void> => {
+    // e.preventDefault();
+
+    const todoItem: ITodo = todos.find((todo: ITodo) => todo.todoID === todoID);
+
+    await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'mode': 'no-cors',
+        'url': `http://localhost:4000`,
+      },
+      body: JSON.stringify({
+        query: `mutation {
+        updateTodo(todoID: ${todoID}, task: "${todoItem.task}", category: "${todoItem.category}") {
+          task
+        }
+      }`
+      }),
+    });
+  }
+
   return (
     <div className="container" >
       <h1>
@@ -100,7 +131,12 @@ function App() {
         {todos.length > 0 && todos.map((todo: ITodo) => {
           return (
             <div key={todo.todoID}>
-              <TodoItem todo={todo} onDelete={deleteTodo} />
+              <TodoItem
+                todo={todo}
+                onDelete={deleteTodo}
+                onTodoItemTaskInputChange={onTodoItemTaskInputChange}
+                onSave={onTodoItemTaskInputSave}
+              />
             </div>
           )
         })}
