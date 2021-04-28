@@ -59,10 +59,13 @@ const RootMutation = new GraphQLObjectType({
             }
         },
         createTodo: {
-            type: GraphQLInt,
+            type: TodoType,
             args: { task: { type: GraphQLNonNull(GraphQLString) }, category: { type: GraphQLNonNull(GraphQLString) } },
-            resolve: (parents, args, ctx, resInfo) => {
-                client.query(`INSERT INTO ${table} (task, category) VALUES ('${args.task}', '${args.category}')`);
+            resolve: async (parents, args, ctx, resInfo) => {
+                const res = await client.query(`INSERT INTO ${table} (task, category) VALUES ('${args.task}', '${args.category}') RETURNING *`).then((err, res) => {
+                    return err ? err : res.rows[0];
+                });
+                return res.rows && res.rows[0] || res;
             }
         },
     }),
