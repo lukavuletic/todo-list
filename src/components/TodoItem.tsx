@@ -11,17 +11,17 @@ interface Props {
 
 export const TodoItem: React.FC<Props> = ({ todo, onDelete, onTodoItemTaskInputChange, onSave }) => {
     return (
-        <div className="todo-item">
+        <div className="inputField">
+            <div className="todo-category">
+                {todo.category}
+            </div>
+            <br />
             <input
-                className="todo-task"
                 type="text"
                 value={todo.task}
                 onChange={(e: { target: HTMLInputElement }) => onTodoItemTaskInputChange(todo.todoID, e.target.value)}
             />
-            <div className="todo-category">
-                {todo.category}
-            </div>
-            <button type="button" onClick={() => onSave(todo.todoID)}>SAVE</button>
+            <button type="button" onClick={() => onSave(todo.todoID)}>OK</button>
             <button type="button" onClick={() => onDelete(todo.todoID)}>X</button>
         </div>
     )

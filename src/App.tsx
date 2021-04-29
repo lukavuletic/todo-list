@@ -37,14 +37,14 @@ function App() {
           } 
         }`
       ).then(r => r.json()).then(data => data.data.todos);
-  
+
       const categories: ITodo["category"][] = res.map(({ category }: { category: ITodo["category"] }) => category);
       setCategories([...new Set(categories)]);
-  
+
       if (isInitial) {
         setStateSelectedCategories(categories);
       }
-  
+
       return res;
     } catch (err) {
       console.log(err);
@@ -72,7 +72,7 @@ function App() {
           deleteTodo(todoID:${id})
         }`
       );
-  
+
       setStateTodos(await getTodos());
     } catch (err) {
       console.log(err);
@@ -93,7 +93,7 @@ function App() {
           }
         }`
       );
-  
+
       setStateTodos(await getTodos());
       // if label is newly created, select it by defualt
       if (!categories.includes(categoryInputValue)) {
@@ -126,7 +126,7 @@ function App() {
   const onTodoItemTaskInputSave = async (todoID: ITodo["todoID"]): Promise<void> => {
     try {
       const todoItem: ITodo = todos.find((todo: ITodo) => todo.todoID === todoID)!;
-  
+
       await coreClient.post(
         `mutation {
           updateTodo(todoID: ${todoID}, task: "${todoItem.task}", category: "${todoItem.category}") {
@@ -142,11 +142,9 @@ function App() {
 
   return (
     <div className="container" >
-      <h1>
-        to-do list
-      </h1>
+      <header>Todo list</header>
       <button type="button" onClick={() => setStateToggleCreateFormShown(!isCreateFormShown)}>
-        {isCreateFormShown ? 'Close' : 'Add a todo'}
+        {isCreateFormShown ? '-' : '+'}
       </button>
       {isCreateFormShown &&
         <TodoCreate
@@ -158,19 +156,20 @@ function App() {
         />
       }
       <br />
-      <p>Categories:</p>
-      {categories.length > 0 && categories.sort((a, b) => a.localeCompare(b))
-        .map((category: string, idx: number) => {
-          return (
-            <div key={idx} className={`category${selectedCategories.includes(category) ? '-selected' : ''}`}>
-              <Category
-                category={category}
-                onSelect={setSelectedCategory}
-              />
-            </div>
-          )
-        })
-      }
+      <div className="categories-wrapper">
+        {categories.length > 0 && categories.sort((a, b) => a.localeCompare(b))
+          .map((category: string, idx: number) => {
+            return (
+              <div key={idx} className={`category${selectedCategories.includes(category) ? '-selected' : ''}`}>
+                <Category
+                  category={category}
+                  onSelect={setSelectedCategory}
+                />
+              </div>
+            )
+          })
+        }
+      </div>
       <br />
       <div className="todo-wrapper">
         {todos.length > 0 && todos.filter((todo: ITodo) => selectedCategories.includes(todo.category))
