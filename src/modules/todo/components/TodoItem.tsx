@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { ITodo } from 'interfaces';
+import { ITodo } from 'interfaces/todo';
 
 interface Props {
     todo: ITodo;
