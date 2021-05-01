@@ -1,66 +1,65 @@
-import React, { FormEvent, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { Category } from 'modules/category/components';
 import { TodoItem, TodoCreate } from 'modules/todo/components';
 
 import { ITodo } from 'interfaces/todo';
-
-import { StateFnTypes } from 'types/core';
+import { ICoreClient } from 'interfaces/core';
 
 interface Props {
-    coreSetState: (data: any, stateFn: StateFnTypes) => void;
-    coreClient: {
-        post: (query: string) => Promise<any>,
-    };
-    state: {
-        todos: ITodo[],
-        selectedCategories: ITodo['category'][],
-        isCreateFormShown: boolean,
-        taskInputValue: string,
-        categoryInputValue: string,
-        categories: ITodo['category'][],
-    };
+    coreClient: ICoreClient;
 }
 
-export const TodoPage: React.FC<Props> = ({ 
-    coreSetState,
-    coreClient, 
-    state: { 
-        todos, 
-        selectedCategories, 
-        isCreateFormShown,
-        taskInputValue,
-        categoryInputValue,
-        categories,
-    } 
+export const TodoPage: React.FC<Props> = ({
+    coreClient,
 }) => {
-    useEffect(() => {
-        const fetchTodos = async (): Promise<void> => {
-            const todosRes: ITodo[] = await getTodos(true);
+    const [isCreateFormShown, setStateToggleCreateFormShown] = useState<boolean>(false);
+    const [todos, setStateTodos] = useState<ITodo[]>([]);
+    const [categories, setStateCategories] = useState<ITodo['category'][]>([]);
+    const [selectedCategories, setStateSelectedCategories] = useState<ITodo['category'][]>([]);
 
-            coreSetState(todosRes, 'getTodos');
+    useEffect(() => {
+        const onInitialize = async (): Promise<void> => {
+            const todosRes: ITodo[] = await getTodos(true);
+            const categories: ITodo["category"][] = todosRes.map(({ category }: { category: ITodo["category"] }) => category);
+
+            setStateTodos(todosRes);
+
+            const uniqueCategories: ITodo['category'][] = [...new Set(categories)]
+            setStateCategories(uniqueCategories);
+            setStateSelectedCategories(uniqueCategories);
         }
 
-        fetchTodos();
+        onInitialize();
     }, []);
+
+    useEffect(() => {
+        const onTodosChange = (): void => {
+            const categories: ITodo["category"][] = todos.map(({ category }: { category: ITodo["category"] }) => category);
+            const uniqueCategories: ITodo['category'][] = [...new Set(categories)]
+            setStateCategories(uniqueCategories);
+        }
+
+        onTodosChange();
+    }, [todos]);
 
     const getTodos = async (isInitial: boolean = false): Promise<ITodo[]> => {
         try {
             const res: ITodo[] = await coreClient.post(
                 `{ 
-            todos { 
-                todoID
-                task
-                category 
-                } 
-            }`
+                    todos { 
+                        todoID
+                        task
+                        category 
+                    } 
+                }`
             ).then(r => r.json()).then(data => data.data.todos);
 
             const categories: ITodo["category"][] = res.map(({ category }: { category: ITodo["category"] }) => category);
-            coreSetState([...new Set(categories)], 'setCategories');
+            setStateCategories([...new Set(categories)]);
 
             if (isInitial) {
-                coreSetState(categories, 'setSelectedCategories');
+                setStateCategories(categories);
             }
 
             return res;
@@ -78,7 +77,7 @@ export const TodoPage: React.FC<Props> = ({
                 }`
             );
 
-            coreSetState(todos.filter(({ todoID }) => todoID !== id), 'setTodos');
+            setStateTodos(todos.filter(({ todoID }) => todoID !== id));
         } catch (err) {
             console.log(err);
             throw new Error('failed to delete the todo');
@@ -86,87 +85,50 @@ export const TodoPage: React.FC<Props> = ({
     }
 
     const onTodoItemTaskInputChange = (todoID: number, value: ITodo["task"]): void => {
-      const todoItemIdx: number = todos.findIndex((todo: ITodo) => todo.todoID === todoID);
-      const todosSlice: ITodo[] = todos.slice();
-      todosSlice[todoItemIdx].task = value;
-  
-      coreSetState(todosSlice, 'setTodos');
+        const todoItemIdx: number = todos.findIndex((todo: ITodo) => todo.todoID === todoID);
+        const todosSlice: ITodo[] = todos.slice();
+        todosSlice[todoItemIdx].task = value;
+
+        setStateTodos(todosSlice);
     }
 
     const onTodoItemTaskInputSave = async (todoID: ITodo["todoID"]): Promise<void> => {
-      try {
-        const todoItem: ITodo = todos.find((todo: ITodo) => todo.todoID === todoID)!;
-  
-        await coreClient.post(
-          `mutation {
-            updateTodo(todoID: ${todoID}, task: "${todoItem.task}", category: "${todoItem.category}") {
-              task
-            }
-          }`
-        );
-      } catch (err) {
-        console.log(err);
-        throw new Error('failed to update the todo');
-      }
-    }
+        try {
+            const todoItem: ITodo = todos.find((todo: ITodo) => todo.todoID === todoID)!;
 
-    const onTaskInputChange = (value: ITodo["task"]): void => {
-      coreSetState(value, 'setTaskInputValue');
-    }
-    
-    const onCategoryInputChange = (value: ITodo["category"]): void => {
-        coreSetState(value, 'setCategoryInputValue');
-    }
-
-    const createTodo = async (e: FormEvent): Promise<void> => {
-      e.preventDefault();
-  
-      try {
-        await coreClient.post(
-          `mutation {
-            createTodo(task: "${taskInputValue}", category: "${categoryInputValue}" ) {
-              todoID
-              task
-              category
-            }
-          }`
-        );
-  
-        coreSetState(await getTodos(), 'setTodos');
-        // if label is newly created, select it by defualt
-        if (!categories.includes(categoryInputValue)) {
-          coreSetState([...selectedCategories, categoryInputValue], 'setSelectedCategories');
+            await coreClient.post(
+                `mutation {
+                    updateTodo(todoID: ${todoID}, task: "${todoItem.task}", category: "${todoItem.category}") {
+                    task
+                    }
+                }`
+            );
+        } catch (err) {
+            console.log(err);
+            throw new Error('failed to update the todo');
         }
-        coreSetState('', 'setTaskInputValue');
-        coreSetState('', 'setCategoryInputValue');
-      } catch (err) {
-        console.log(err);
-        throw new Error('failed to create the todo');
-      }
     }
 
     const setSelectedCategory = (category: ITodo["category"]): void => {
-      const ctgIdxInSelCtgs: number = selectedCategories.findIndex((c: ITodo["category"]) => category === c);
-      if (ctgIdxInSelCtgs === -1) {
-        coreSetState([...selectedCategories, category], 'setSelectedCategories');
-      } else {
-        coreSetState(selectedCategories.filter((c: ITodo["category"]) => c !== category), 'setSelectedCategories');
-      }
+        const ctgIdxInSelCtgs: number = selectedCategories.findIndex((c: ITodo["category"]) => category === c);
+        if (ctgIdxInSelCtgs === -1) {
+            setStateSelectedCategories([...selectedCategories, category]);
+        } else {
+            setStateSelectedCategories(selectedCategories.filter((c: ITodo["category"]) => c !== category));
+        }
     }
 
     return (
         <React.Fragment>
             <header>Todo list</header>
-            <button type="button" onClick={() => coreSetState(!isCreateFormShown, 'setToggleCreateFormShown')}>
+            <button type="button" onClick={() => setStateToggleCreateFormShown(!isCreateFormShown)}>
                 {isCreateFormShown ? '-' : '+'}
             </button>
             {isCreateFormShown &&
                 <TodoCreate
-                    onSubmit={createTodo}
-                    onTaskInputChange={onTaskInputChange}
-                    onCategoryInputChange={onCategoryInputChange}
-                    taskInputValue={taskInputValue}
-                    categoryInputValue={categoryInputValue}
+                    coreClient={coreClient}
+                    state={{ categories, selectedCategories, todos }}
+                    actions={{ setStateTodos, setStateSelectedCategories }}
                 />
             }
             <br />
