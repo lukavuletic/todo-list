@@ -2,7 +2,7 @@ import React from 'react';
 
 import './App.css';
 
-import { TodoPage } from './modules/todo/pages';
+import { TodoPage } from 'modules/todo/pages';
 
 import { CoreClient } from 'core';
 

@@ -19,6 +19,32 @@ export const TodoPage: React.FC<Props> = ({
     const [selectedCategories, setStateSelectedCategories] = useState<ITodo['category'][]>([]);
 
     useEffect(() => {
+        const getTodos = async (isInitial: boolean = false): Promise<ITodo[]> => {
+            try {
+                const res: ITodo[] = await coreClient.post(
+                    `{ 
+                        todos { 
+                            todoID
+                            task
+                            category 
+                        } 
+                    }`
+                ).then(r => r.json()).then(data => data.data.todos);
+
+                const categories: ITodo["category"][] = res.map(({ category }: { category: ITodo["category"] }) => category);
+                setStateCategories([...new Set(categories)]);
+
+                if (isInitial) {
+                    setStateCategories(categories);
+                }
+
+                return res;
+            } catch (err) {
+                console.log(err);
+                throw new Error('failed to get todos');
+            }
+        }
+
         const onInitialize = async (): Promise<void> => {
             const todosRes: ITodo[] = await getTodos(true);
             const categories: ITodo["category"][] = todosRes.map(({ category }: { category: ITodo["category"] }) => category);
@@ -31,7 +57,7 @@ export const TodoPage: React.FC<Props> = ({
         }
 
         onInitialize();
-    }, []);
+    }, [coreClient]);
 
     useEffect(() => {
         const onTodosChange = (): void => {
@@ -42,32 +68,6 @@ export const TodoPage: React.FC<Props> = ({
 
         onTodosChange();
     }, [todos]);
-
-    const getTodos = async (isInitial: boolean = false): Promise<ITodo[]> => {
-        try {
-            const res: ITodo[] = await coreClient.post(
-                `{ 
-                    todos { 
-                        todoID
-                        task
-                        category 
-                    } 
-                }`
-            ).then(r => r.json()).then(data => data.data.todos);
-
-            const categories: ITodo["category"][] = res.map(({ category }: { category: ITodo["category"] }) => category);
-            setStateCategories([...new Set(categories)]);
-
-            if (isInitial) {
-                setStateCategories(categories);
-            }
-
-            return res;
-        } catch (err) {
-            console.log(err);
-            throw new Error('failed to get todos');
-        }
-    }
 
     const deleteTodo = async (id: ITodo['todoID']): Promise<void> => {
         try {
@@ -82,7 +82,7 @@ export const TodoPage: React.FC<Props> = ({
             console.log(err);
             throw new Error('failed to delete the todo');
         }
-    }
+    };
 
     const onTodoItemTaskInputChange = (todoID: number, value: ITodo["task"]): void => {
         const todoItemIdx: number = todos.findIndex((todo: ITodo) => todo.todoID === todoID);
@@ -90,7 +90,7 @@ export const TodoPage: React.FC<Props> = ({
         todosSlice[todoItemIdx].task = value;
 
         setStateTodos(todosSlice);
-    }
+    };
 
     const onTodoItemTaskInputSave = async (todoID: ITodo["todoID"]): Promise<void> => {
         try {
@@ -107,7 +107,7 @@ export const TodoPage: React.FC<Props> = ({
             console.log(err);
             throw new Error('failed to update the todo');
         }
-    }
+    };
 
     const setSelectedCategory = (category: ITodo["category"]): void => {
         const ctgIdxInSelCtgs: number = selectedCategories.findIndex((c: ITodo["category"]) => category === c);
@@ -116,7 +116,7 @@ export const TodoPage: React.FC<Props> = ({
         } else {
             setStateSelectedCategories(selectedCategories.filter((c: ITodo["category"]) => c !== category));
         }
-    }
+    };
 
     return (
         <React.Fragment>
