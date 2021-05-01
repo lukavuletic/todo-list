@@ -2,7 +2,8 @@ import React, { FormEvent, useEffect, useState } from 'react';
 
 import './App.css';
 
-import { TodoItem, TodoCreate, Category } from './components';
+import { Category } from './components/category/pages';
+import { TodoItem, TodoCreate } from './components/todo/pages';
 import { ITodo } from './interfaces';
 import { CoreClient } from './core';
 

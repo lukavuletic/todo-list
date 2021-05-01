@@ -1,5 +1,5 @@
 import React, { FormEvent } from 'react';
-import { ITodo } from '../interfaces';
+import { ITodo } from 'interfaces';
 
 interface Props {
     onSubmit: (e: FormEvent) => Promise<void>;
