@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const { graphqlHTTP } = require('express-graphql');
-const { GraphQLSchema, GraphQLObjectType, GraphQLString, GraphQLNonNull, GraphQLInt, GraphQLList, isNullableType } = require('graphql');
+const { GraphQLSchema, GraphQLObjectType, GraphQLString, GraphQLNonNull, GraphQLInt, GraphQLList } = require('graphql');
 const { Client } = require('pg');
 
 const table = 'todo."Todo"';
