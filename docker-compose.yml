@@ -1,0 +1,44 @@
+version: "2"
+
+services:
+    postgres:
+        image: postgres
+        restart: always
+        ports:
+            - "5432:5432"
+        environment: 
+            POSTGRES_USER: superuser
+            POSTGRES_PASSWORD: superuser
+            POSTGRES_DB: todo
+        volumes: 
+            - ./api:/var/lib/postgreslql/data
+        networks: 
+            - todo-list-network
+    api:
+        image: todo-list-api
+        ports:
+            - "4000:4000"
+        volumes:
+            - /api:/node_modules
+        depends_on:
+            - postgres
+        networks: 
+            - todo-list-network
+        build:
+            context: ./api
+    client:
+        image: todo-list-client
+        ports:
+            - "3000:3000"
+        volumes:
+            - /client:/node_modules
+        links:
+            - api
+        networks: 
+            - todo-list-network
+        build:
+            context: ./client
+
+networks: 
+    todo-list-network:
+        driver: bridge
